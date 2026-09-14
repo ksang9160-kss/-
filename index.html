@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가맹 창업비용 계산 및 브랜드 검색 시스템</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        /* 실시간 검색 드롭다운 스타일 */
+        .search-results {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        /* 스크롤바 커스텀 */
+        .search-results::-webkit-scrollbar {
+            width: 6px;
+        }
+        .search-results::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .search-results::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .search-results::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* 입력 필드 포커스 효과 제거 */
+        input:focus, select:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex h-16 items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-md">
+                    가
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold text-slate-900 leading-tight">가맹 창업비용 및 브랜드 검색 시스템</h1>
+                    <p class="text-xs text-slate-500">공정거래위원회 정보공개서 데이터 기반 (중분류 세분화)</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+
+        <!-- 1. 창업비용 계산기 (중분류 세분화 반영) -->
+        <section class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+            <div class="mb-6 border-b border-slate-100 pb-4">
+                <h2 class="text-xl font-bold text-slate-900">1. 가맹 창업비용 계산기</h2>
+                <p class="text-slate-600 text-sm mt-1">대표업종(중분류)을 선택하고 점포 평수를 조절하여 예상 총 창업비용을 확인하세요.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">창업 업종 선택 (중분류)</label>
+                        <select id="calcSector" onchange="calculateCost()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-colors cursor-pointer">
+                            <optgroup label="외식업">
+                                <option value="korean">한식 (국밥, 찌개, 고기구이 등)</option>
+                                <option value="coffee">커피 (일반, 저가커피, 스페셜티)</option>
+                                <option value="chicken">치킨 (후라이드, 오븐구이 등)</option>
+                                <option value="bakery">제과제빵 (베이커리, 디저트)</option>
+                                <option value="fastfood">패스트푸드 (버거, 샌드위치)</option>
+                                <option value="pub">주점 (호프, 이자카야, 포차)</option>
+                                <option value="pizza">피자 (배달전문, 다이닝)</option>
+                                <option value="asian">아시아식 (중식, 일식, 동남아식)</option>
+                            </optgroup>
+                            <optgroup label="도소매업">
+                                <option value="convenience">편의점</option>
+                                <option value="cosmetics">화장품</option>
+                                <option value="retail_other">기타 도소매 (밀키트, 농축수산물)</option>
+                            </optgroup>
+                            <optgroup label="서비스업">
+                                <option value="education">교육/학원 (입시, 어학, 예체능)</option>
+                                <option value="beauty">이미용 (헤어, 네일, 피부)</option>
+                                <option value="fitness">스포츠/피트니스 (헬스, 필라테스)</option>
+                                <option value="space">공간대여 (스터디카페, 무인사진관)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-semibold text-slate-700">점포 평수 (면적)</label>
+                            <span id="areaValue" class="text-lg font-extrabold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md">20 평</span>
+                        </div>
+                        <input type="range" id="calcArea" min="5" max="100" value="20" step="1" oninput="calculateCost()" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                        <div class="flex justify-between text-xs text-slate-400 mt-1">
+                            <span>5평 (소형/테이크아웃)</span>
+                            <span>100평 (대형)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-900 p-6 rounded-xl text-white shadow-inner flex flex-col justify-center h-full">
+                    <h3 class="text-sm font-medium text-indigo-200 mb-4">예상 초기 창업 비용 내역</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between items-center pb-2 border-b border-indigo-700/50">
+                            <span class="text-indigo-100">가입비(가맹비)</span>
+                            <span id="feeJoinText" class="font-semibold text-white">0 만원</span>
+                        </div>
+                        <div class="flex justify-between items-center pb-2 border-b border-indigo-700/50">
+                            <span class="text-indigo-100">교육비</span>
+                            <span id="feeEduText" class="font-semibold text-white">0 만원</span>
+                        </div>
+                        <div class="flex justify-between items-center pb-2 border-b border-indigo-700/50">
+                            <span class="text-indigo-100">보증금</span>
+                            <span id="feeDepositText" class="font-semibold text-white">0 만원</span>
+                        </div>
+                        <div class="flex justify-between items-center pb-2 border-b border-indigo-700/50">
+                            <span class="text-indigo-100">기타비용 (초도물품 등)</span>
+                            <span id="feeOtherText" class="font-semibold text-white">0 만원</span>
+                        </div>
+                        <div class="flex justify-between items-center pb-2 border-b border-indigo-700/50">
+                            <span class="text-indigo-100">인테리어/설비비 (<span id="pyeongText">0</span>평)</span>
+                            <span id="feeInteriorText" class="font-semibold text-white">0 만원</span>
+                        </div>
+                        <div class="pt-4 flex justify-between items-end">
+                            <span class="text-base text-indigo-200 font-medium">추정 총 창업비용</span>
+                            <div class="text-right">
+                                <span id="totalCostText" class="text-3xl font-extrabold text-amber-400">0</span>
+                                <span class="text-amber-400 ml-1">만원</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-indigo-300 mt-4 leading-tight">
+                        * 본 산출 금액은 정보공개서 평균 데이터를 기반으로 한 추정치이며, 점포 임대차 보증금 및 권리금, 별도 공사 비용(철거, 냉난방, 소방 등)은 제외된 금액입니다.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 실시간 브랜드명 검색 -->
+        <section class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+            <div class="mb-6 border-b border-slate-100 pb-4">
+                <h2 class="text-xl font-bold text-slate-900">2. 브랜드 상세 정보 검색</h2>
+                <p class="text-slate-600 text-sm mt-1">브랜드명을 입력하시면 실시간으로 정보공개서 세부 현황을 조회합니다.</p>
+            </div>
+
+            <!-- 검색 입력창 -->
+            <div class="relative w-full mb-8">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input type="text" id="searchInput" class="block w-full pl-11 pr-4 py-4 border-2 border-indigo-100 rounded-xl text-slate-900 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-0 text-lg transition-colors placeholder-slate-400" placeholder="브랜드명을 입력하세요 (예: 빽다방, 교촌치킨, 파리바게뜨)..." autocomplete="off">
+                
+                <!-- 검색어 자동완성 드롭다운 -->
+                <div id="autocompleteDropdown" class="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg hidden search-results">
+                    <ul id="suggestionList" class="py-2 text-sm text-slate-700">
+                        <!-- JS로 리스트 아이템 삽입 -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 검색 결과 표시 영역 -->
+            <div id="resultContainer" class="hidden">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-100 to-indigo-50 border border-indigo-200 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    </div>
+                    <div>
+                        <h3 id="resBrandName" class="text-2xl font-bold text-slate-900">브랜드명</h3>
+                        <p id="resSector" class="text-sm font-medium text-indigo-600 mt-0.5">업종 / 대표자: 홍길동</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- 기본 현황 -->
+                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                        <div class="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">가맹본부 기본현황</div>
+                        <ul class="space-y-3">
+                            <li class="flex justify-between items-center">
+                                <span class="text-sm text-slate-600">대표자명</span>
+                                <span id="resRepName" class="text-sm font-semibold text-slate-900">데이터 없음</span>
+                            </li>
+                            <li class="flex justify-between items-center">
+                                <span class="text-sm text-slate-600">등록 브랜드수</span>
+                                <span id="resBrandCount" class="text-sm font-semibold text-slate-900">0 개</span>
+                            </li>
+                            <li class="flex justify-between items-center">
+                                <span class="text-sm text-slate-600">직원수</span>
+                                <span id="resEmployeeCount" class="text-sm font-semibold text-slate-900">0 명</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- 가맹점 현황 -->
+                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                        <div class="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">점포 운영 현황</div>
+                        <ul class="space-y-3">
+                            <li class="flex justify-between items-center">
+                                <span class="text-sm text-slate-600">가맹점수</span>
+                                <span id="resFranchiseCount" class="text-sm font-bold text-indigo-600">0 개</span>
+                            </li>
+                            <li class="flex justify-between items-center">
+                                <span class="text-sm text-slate-600">직영점수</span>
+                                <span id="resDirectCount" class="text-sm font-semibold text-slate-900">0 개</span>
+                            </li>
+                            <li class="flex justify-between items-center">
+                                <span class="text-sm text-slate-600">2024년 재무상황</span>
+                                <span id="resFinance" class="text-sm font-semibold text-slate-900 text-right w-2/3 truncate" title="">조회불가</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- 초기 비용 현황 -->
+                    <div class="bg-amber-50/50 rounded-xl p-4 border border-amber-200 lg:col-span-1 md:col-span-2">
+                        <div class="text-xs font-semibold text-amber-700 mb-3 uppercase tracking-wider">본사 청구 초기비용</div>
+                        <ul class="space-y-2">
+                            <li class="flex justify-between items-center">
+                                <span class="text-sm text-slate-600">가입비(가맹비)</span>
+                                <span id="resJoinFee" class="text-sm font-semibold text-slate-900">0</span>
+                            </li>
+                            <li class="flex justify-between items-center">
+                                <span class="text-sm text-slate-600">교육비</span>
+                                <span id="resEduFee" class="text-sm font-semibold text-slate-900">0</span>
+                            </li>
+                            <li class="flex justify-between items-center">
+                                <span class="text-sm text-slate-600">보증금</span>
+                                <span id="resDeposit" class="text-sm font-semibold text-slate-900">0</span>
+                            </li>
+                            <li class="flex justify-between items-center">
+                                <span class="text-sm text-slate-600">기타비용</span>
+                                <span id="resOtherFee" class="text-sm font-semibold text-slate-900">0</span>
+                            </li>
+                            <li class="flex justify-between items-center mt-2 pt-2 border-t border-amber-200/60">
+                                <span class="text-sm font-medium text-amber-800">예치가맹금</span>
+                                <span id="resEscrowFee" class="text-sm font-bold text-amber-700">0</span>
+                            </li>
+                            <li class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-amber-800">인테리어비용</span>
+                                <span id="resInteriorFee" class="text-sm font-bold text-amber-700">0</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 초기 안내 화면 -->
+            <div id="initialStateContainer" class="flex flex-col items-center justify-center py-12 text-slate-400">
+                <svg class="w-16 h-16 mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z"></path></svg>
+                <p class="text-sm font-medium">검색창에 브랜드명을 입력하여 분석 결과를 확인하세요.</p>
+                <p class="text-xs mt-1">지원 초성/부분 검색 (예: 메가, 파리, 교촌)</p>
+            </div>
+            
+            <!-- 검색 결과 없음 화면 -->
+            <div id="noResultContainer" class="hidden flex flex-col items-center justify-center py-12 text-slate-400">
+                <svg class="w-16 h-16 mb-4 text-rose-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <p class="text-sm font-medium text-rose-500">일치하는 브랜드가 없습니다.</p>
+                <p class="text-xs mt-1">철자를 확인하거나 다른 검색어를 입력해보세요.</p>
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-6 text-xs border-t border-slate-800 mt-auto">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <p class="font-medium">공정거래위원회 가맹사업 등록현황 데이터 조회 유틸리티</p>
+            <p>데이터 기준: 2026.05.22 전체(외식,도소매,서비스)</p>
+        </div>
+    </footer>
+
+    <script>
+        /* -----------------------------------------
+           1. 가맹 창업비용 계산기 로직
+        ----------------------------------------- */
+        function calculateCost() {
+            const sector = document.getElementById('calcSector').value;
+            const area = parseInt(document.getElementById('calcArea').value);
+            
+            document.getElementById('areaValue').innerText = area + " 평";
+            document.getElementById('pyeongText').innerText = area;
+
+            // 중분류(대표업종) 기준 가맹 사업 비용 매핑 데이터 (정보공개서 평균 추정치)
+            // 단위: 만원
+            const sectorData = {
+                'korean': { join: 750, edu: 300, deposit: 300, other: 1500, pyeong: 160 },
+                'coffee': { join: 500, edu: 300, deposit: 500, other: 3000, pyeong: 200 },
+                'chicken': { join: 500, edu: 250, deposit: 200, other: 1200, pyeong: 150 },
+                'bakery': { join: 1000, edu: 350, deposit: 500, other: 4000, pyeong: 250 },
+                'fastfood': { join: 800, edu: 300, deposit: 500, other: 3500, pyeong: 220 },
+                'pub': { join: 700, edu: 300, deposit: 300, other: 1800, pyeong: 170 },
+                'pizza': { join: 600, edu: 250, deposit: 300, other: 2000, pyeong: 180 },
+                'asian': { join: 800, edu: 350, deposit: 300, other: 2000, pyeong: 190 },
+                'convenience': { join: 770, edu: 0, deposit: 2000, other: 3000, pyeong: 150 },
+                'cosmetics': { join: 1000, edu: 150, deposit: 1000, other: 4000, pyeong: 250 },
+                'retail_other': { join: 500, edu: 100, deposit: 300, other: 1500, pyeong: 140 },
+                'education': { join: 500, edu: 200, deposit: 100, other: 1000, pyeong: 100 },
+                'beauty': { join: 800, edu: 300, deposit: 500, other: 2000, pyeong: 200 },
+                'fitness': { join: 1000, edu: 500, deposit: 1000, other: 10000, pyeong: 250 },
+                'space': { join: 500, edu: 100, deposit: 200, other: 3000, pyeong: 180 }
+            };
+
+            const data = sectorData[sector];
+            const interiorTotal = Math.round(data.pyeong * area);
+            const totalCost = data.join + data.edu + data.deposit + data.other + interiorTotal;
+
+            // DOM 업데이트
+            document.getElementById('feeJoinText').innerText = data.join.toLocaleString() + " 만원";
+            document.getElementById('feeEduText').innerText = data.edu.toLocaleString() + " 만원";
+            document.getElementById('feeDepositText').innerText = data.deposit.toLocaleString() + " 만원";
+            document.getElementById('feeOtherText').innerText = data.other.toLocaleString() + " 만원";
+            document.getElementById('feeInteriorText').innerText = interiorTotal.toLocaleString() + " 만원";
+            
+            // 카운트업 애니메이션 적용 함수 호출 가능하나 여기선 즉시 업데이트
+            document.getElementById('totalCostText').innerText = totalCost.toLocaleString();
+        }
+
+        /* -----------------------------------------
+           2. 브랜드 검색 로직 (샘플 데이터 모사)
+        ----------------------------------------- */
+        
+        // 엑셀 데이터를 모사한 샘플 데이터 (실제 엑셀 파싱 후 JSON 형태로 이 배열을 구성하면 됨)
+        const mockDatabase = [
+            { brandName: '빽다방', sector: '외식 / 커피', repName: '백종원', brandCount: 25, franchiseCount: 1241, directCount: 15, finance2024: '매출 1,450억 / 영업이익 120억', employeeCount: 380, joinFee: '330만 원', eduFee: '330만 원', deposit: '500만 원', otherFee: '1,500만 원', escrowFee: '1,160만 원', interiorFee: '4,500만 원 (15평)' },
+            { brandName: '교촌치킨', sector: '외식 / 치킨', repName: '권원강', brandCount: 3, franchiseCount: 1378, directCount: 42, finance2024: '매출 4,200억 / 영업이익 280억', employeeCount: 410, joinFee: '550만 원', eduFee: '330만 원', deposit: '1,000만 원', otherFee: '2,500만 원', escrowFee: '1,880만 원', interiorFee: '5,800만 원 (20평)' },
+            { brandName: '메가엠지씨커피', sector: '외식 / 커피', repName: '김대영', brandCount: 1, franchiseCount: 2450, directCount: 10, finance2024: '매출 3,100억 / 영업이익 450억', employeeCount: 120, joinFee: '0만 원 (면제)', eduFee: '330만 원', deposit: '200만 원', otherFee: '1,800만 원', escrowFee: '530만 원', interiorFee: '3,800만 원 (10평)' },
+            { brandName: '파리바게뜨', sector: '외식 / 제과제빵', repName: '허영인 외', brandCount: 8, franchiseCount: 3410, directCount: 32, finance2024: '매출 1조 8,000억 / 영업이익 950억', employeeCount: 1250, joinFee: '1,100만 원', eduFee: '550만 원', deposit: '2,000만 원', otherFee: '6,000만 원', escrowFee: '3,650만 원', interiorFee: '1억 2,000만 원 (30평)' },
+            { brandName: '비비큐(BBQ)', sector: '외식 / 치킨', repName: '윤홍근', brandCount: 5, franchiseCount: 1980, directCount: 28, finance2024: '매출 3,800억 / 영업이익 320억', employeeCount: 350, joinFee: '1,100만 원', eduFee: '440만 원', deposit: '500만 원', otherFee: '3,000만 원', escrowFee: '2,040만 원', interiorFee: '6,500만 원 (20평)' },
+            { brandName: 'BHC', sector: '외식 / 치킨', repName: '임금옥', brandCount: 4, franchiseCount: 1950, directCount: 21, finance2024: '매출 4,100억 / 영업이익 410억', employeeCount: 290, joinFee: '880만 원', eduFee: '330만 원', deposit: '500만 원', otherFee: '2,800만 원', escrowFee: '1,710만 원', interiorFee: '6,200만 원 (20평)' },
+            { brandName: 'CU', sector: '도소매 / 편의점', repName: '이건준', brandCount: 2, franchiseCount: 16800, directCount: 150, finance2024: '매출 7조 2,000억 / 영업이익 2,400억', employeeCount: 2500, joinFee: '770만 원', eduFee: '0만 원', deposit: '2,500만 원', otherFee: '2,000만 원', escrowFee: '3,270만 원', interiorFee: '0만 원 (본사지원)' },
+            { brandName: 'GS25', sector: '도소매 / 편의점', repName: '허연수', brandCount: 3, franchiseCount: 16500, directCount: 140, finance2024: '매출 7조 1,500억 / 영업이익 2,350억', employeeCount: 2800, joinFee: '770만 원', eduFee: '0만 원', deposit: '2,500만 원', otherFee: '2,200만 원', escrowFee: '3,270만 원', interiorFee: '0만 원 (본사지원)' },
+            { brandName: '명륜진사갈비', sector: '외식 / 한식', repName: '원종민', brandCount: 1, franchiseCount: 520, directCount: 8, finance2024: '매출 1,800억 / 영업이익 250억', employeeCount: 85, joinFee: '1,650만 원', eduFee: '550만 원', deposit: '1,000만 원', otherFee: '5,000만 원', escrowFee: '3,200만 원', interiorFee: '1억 5,000만 원 (50평)' },
+            { brandName: '올리브영', sector: '도소매 / 화장품', repName: '구창근', brandCount: 1, franchiseCount: 1250, directCount: 850, finance2024: '매출 2조 5,000억 / 영업이익 1,800억', employeeCount: 5500, joinFee: '2,200만 원', eduFee: '330만 원', deposit: '5,000만 원', otherFee: '1억 원', escrowFee: '7,530만 원', interiorFee: '1억 8,000만 원 (40평)' }
+        ];
+
+        const searchInput = document.getElementById('searchInput');
+        const dropdown = document.getElementById('autocompleteDropdown');
+        const suggestionList = document.getElementById('suggestionList');
+        
+        // 컨테이너들
+        const stateInitial = document.getElementById('initialStateContainer');
+        const stateResult = document.getElementById('resultContainer');
+        const stateNoResult = document.getElementById('noResultContainer');
+
+        // 초성 추출 함수 (간단한 버전 - 한글 유니코드 기반)
+        function getChoSung(str) {
+            const cho = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+            let result = "";
+            for(let i=0; i<str.length; i++) {
+                const code = str.charCodeAt(i) - 44032;
+                if(code > -1 && code < 11172) result += cho[Math.floor(code/588)];
+                else result += str.charAt(i);
+            }
+            return result;
+        }
+
+        // 실시간 입력 이벤트 리스너
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.trim().toLowerCase();
+            const queryCho = getChoSung(query);
+            
+            suggestionList.innerHTML = ''; // 초기화
+            
+            if (query.length === 0) {
+                dropdown.classList.add('hidden');
+                hideAllStates();
+                stateInitial.classList.remove('hidden');
+                return;
+            }
+
+            // 필터링: 브랜드명에 검색어가 포함되거나, 초성이 일치하는 경우
+            const matches = mockDatabase.filter(item => {
+                const brandName = item.brandName.toLowerCase();
+                const brandCho = getChoSung(brandName);
+                return brandName.includes(query) || brandCho.includes(queryCho);
+            });
+
+            if (matches.length > 0) {
+                dropdown.classList.remove('hidden');
+                
+                matches.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'px-4 py-3 hover:bg-indigo-50 cursor-pointer flex justify-between items-center border-b border-slate-50 last:border-0';
+                    li.innerHTML = `
+                        <span class="font-bold text-slate-800">${item.brandName}</span>
+                        <span class="text-xs text-slate-400">${item.sector}</span>
+                    `;
+                    // 드롭다운 아이템 클릭 시 결과 표시
+                    li.addEventListener('click', () => {
+                        searchInput.value = item.brandName;
+                        dropdown.classList.add('hidden');
+                        displayResult(item);
+                    });
+                    suggestionList.appendChild(li);
+                });
+            } else {
+                dropdown.classList.add('hidden');
+                hideAllStates();
+                stateNoResult.classList.remove('hidden');
+            }
+        });
+
+        // 결과 화면 표시 함수
+        function displayResult(data) {
+            hideAllStates();
+            stateResult.classList.remove('hidden');
+
+            // DOM 텍스트 바인딩
+            document.getElementById('resBrandName').innerText = data.brandName;
+            document.getElementById('resSector').innerText = `${data.sector} / 대표자: ${data.repName}`;
+            
+            document.getElementById('resRepName').innerText = data.repName;
+            document.getElementById('resBrandCount').innerText = `${data.brandCount} 개`;
+            document.getElementById('resEmployeeCount').innerText = `${data.employeeCount.toLocaleString()} 명`;
+            
+            document.getElementById('resFranchiseCount').innerText = `${data.franchiseCount.toLocaleString()} 개`;
+            document.getElementById('resDirectCount').innerText = `${data.directCount.toLocaleString()} 개`;
+            
+            const financeEl = document.getElementById('resFinance');
+            financeEl.innerText = data.finance2024;
+            financeEl.title = data.finance2024; // 툴팁 제공
+            
+            document.getElementById('resJoinFee').innerText = data.joinFee;
+            document.getElementById('resEduFee').innerText = data.eduFee;
+            document.getElementById('resDeposit').innerText = data.deposit;
+            document.getElementById('resOtherFee').innerText = data.otherFee;
+            
+            document.getElementById('resEscrowFee').innerText = data.escrowFee;
+            document.getElementById('resInteriorFee').innerText = data.interiorFee;
+        }
+
+        // 화면 상태 초기화 헬퍼
+        function hideAllStates() {
+            stateInitial.classList.add('hidden');
+            stateResult.classList.add('hidden');
+            stateNoResult.classList.add('hidden');
+            // flex 속성을 다루기 위해 flex class도 제어해야 함
+            stateInitial.classList.remove('flex');
+            stateNoResult.classList.remove('flex');
+            
+            if(stateInitial.classList.contains('hidden') === false) stateInitial.classList.add('flex');
+            if(stateNoResult.classList.contains('hidden') === false) stateNoResult.classList.add('flex');
+        }
+        
+        // CSS 클래스 충돌 방지를 위한 강제 flex 제어 함수 오버라이드
+        function hideAllStates() {
+            stateInitial.style.display = 'none';
+            stateResult.style.display = 'none';
+            stateNoResult.style.display = 'none';
+        }
+        
+        // 초기화 시 flex 세팅
+        document.addEventListener('DOMContentLoaded', () => {
+            calculateCost(); // 초기 1회 계산기 실행
+            
+            // Flex 기반 컨테이너 초기화
+            stateInitial.style.display = 'flex';
+            stateResult.style.display = 'none';
+            stateNoResult.style.display = 'none';
+            
+            // CSS 클래스 정리 (tailwind hidden 사용 안하고 style.display 제어)
+            stateInitial.classList.remove('hidden');
+            stateResult.classList.remove('hidden');
+            stateNoResult.classList.remove('hidden');
+        });
+
+        // 문서 바깥 클릭 시 드롭다운 닫기
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // 덮어쓴 hideAllStates와 displayResult 연동 수정
+        function hideAllStates() {
+            stateInitial.style.display = 'none';
+            stateResult.style.display = 'none';
+            stateNoResult.style.display = 'none';
+        }
+        
+        // 이벤트 리스너 내부에서 분기처리 재정의 (클로저 문제 해결)
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.trim().toLowerCase();
+            const queryCho = getChoSung(query);
+            
+            suggestionList.innerHTML = '';
+            
+            if (query.length === 0) {
+                dropdown.classList.add('hidden');
+                hideAllStates();
+                stateInitial.style.display = 'flex';
+                return;
+            }
+
+            const matches = mockDatabase.filter(item => {
+                const brandName = item.brandName.toLowerCase();
+                const brandCho = getChoSung(brandName);
+                return brandName.includes(query) || brandCho.includes(queryCho);
+            });
+
+            if (matches.length > 0) {
+                dropdown.classList.remove('hidden');
+                matches.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'px-4 py-3 hover:bg-indigo-50 cursor-pointer flex justify-between items-center border-b border-slate-50 last:border-0';
+                    li.innerHTML = `<span class="font-bold text-slate-800">${item.brandName}</span><span class="text-xs text-slate-400">${item.sector}</span>`;
+                    li.addEventListener('click', () => {
+                        searchInput.value = item.brandName;
+                        dropdown.classList.add('hidden');
+                        displayResultState(item);
+                    });
+                    suggestionList.appendChild(li);
+                });
+            } else {
+                dropdown.classList.add('hidden');
+                hideAllStates();
+                stateNoResult.style.display = 'flex';
+            }
+        });
+
+        function displayResultState(data) {
+            hideAllStates();
+            stateResult.style.display = 'block';
+
+            document.getElementById('resBrandName').innerText = data.brandName;
+            document.getElementById('resSector').innerText = `${data.sector} / 대표자: ${data.repName}`;
+            document.getElementById('resRepName').innerText = data.repName;
+            document.getElementById('resBrandCount').innerText = `${data.brandCount} 개`;
+            document.getElementById('resEmployeeCount').innerText = `${data.employeeCount.toLocaleString()} 명`;
+            document.getElementById('resFranchiseCount').innerText = `${data.franchiseCount.toLocaleString()} 개`;
+            document.getElementById('resDirectCount').innerText = `${data.directCount.toLocaleString()} 개`;
+            
+            const financeEl = document.getElementById('resFinance');
+            financeEl.innerText = data.finance2024;
+            financeEl.title = data.finance2024;
+            
+            document.getElementById('resJoinFee').innerText = data.joinFee;
+            document.getElementById('resEduFee').innerText = data.eduFee;
+            document.getElementById('resDeposit').innerText = data.deposit;
+            document.getElementById('resOtherFee').innerText = data.otherFee;
+            document.getElementById('resEscrowFee').innerText = data.escrowFee;
+            document.getElementById('resInteriorFee').innerText = data.interiorFee;
+        }
+
+    </script>
+</body>
+</html>
